@@ -1,11 +1,11 @@
 # Puppeteer memory leak checker
 
-A slightly modified version presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub>a saved article copy is available in the docs folder</sub>
+A slightly modified version presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub> a saved article copy is available in the docs folder</sub>
 
-- index.js is just a puppeteer visitor script
-- drawmemoryoncharg.js is a chart drawing script<sub>[source](https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043)</sub>
-- "csv-parse" and "puppeteer" modules are required for the opener
-- "vega" and "sharp" modules are needed for drawing the chart
+- `index.js`` is just a puppeteer visitor script
+- `drawmemoryoncharg.js`` is a chart drawing script<sub>[source](https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043)</sub>
+- `csv-parse` and `puppeteer` modules are required for the opener
+- `vega` and `sharp` modules are needed for drawing the chart
 
 The mentioned alexa top csv file isn't available anymore, therefore it's been replaced by the [Cloudflare top 5000 domains](https://radar.cloudflare.com/domains) (unsorted)
 
@@ -17,7 +17,7 @@ sudo apt-get install ca-certificates fonts-liberation libappindicator3-1 libasou
 ```
 
 There's an option to save the screenshots, if needed, uncomment the following line
-`// await page.screenshot({path: `file${i}.png`});`
+`// await page.screenshot({path: \`file${i}.png\`});`
 
 ---
 
