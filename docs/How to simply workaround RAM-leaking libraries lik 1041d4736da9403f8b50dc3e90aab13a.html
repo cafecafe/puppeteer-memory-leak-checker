@@ -1,0 +1,834 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>How to simply workaround RAM-leaking libraries like Puppeteer. Universal way to fix RAM leaks once and forever</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+    margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-uiBlue { background-color: rgba(35, 131, 226, .07); }
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+.select-value-color-pageGlass { background-color: undefined; }
+.select-value-color-washGlass { background-color: undefined; }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="1041d473-6da9-403f-8b50-dc3e90aab13a" class="page sans"><header><h1 class="page-title">How to simply workaround RAM-leaking libraries like Puppeteer. Universal way to fix RAM leaks once and forever</h1><p class="page-description"></p><table class="properties"><tbody><tr class="property-row property-row-created_time"><th><span class="icon property-icon"><svg role="graphics-symbol" viewBox="0 0 16 16" style="width:14px;height:14px;display:block;fill:rgba(55, 53, 47, 0.45);flex-shrink:0" class="typesCreatedAt"><path d="M8 15.126C11.8623 15.126 15.0615 11.9336 15.0615 8.06445C15.0615 4.20215 11.8623 1.00293 7.99316 1.00293C4.13086 1.00293 0.938477 4.20215 0.938477 8.06445C0.938477 11.9336 4.1377 15.126 8 15.126ZM8 13.7383C4.85547 13.7383 2.33301 11.209 2.33301 8.06445C2.33301 4.91992 4.84863 2.39746 7.99316 2.39746C11.1377 2.39746 13.6738 4.91992 13.6738 8.06445C13.6738 11.209 11.1445 13.7383 8 13.7383ZM4.54102 8.91211H7.99316C8.30078 8.91211 8.54004 8.67285 8.54004 8.37207V3.8877C8.54004 3.58691 8.30078 3.34766 7.99316 3.34766C7.69238 3.34766 7.45312 3.58691 7.45312 3.8877V7.83203H4.54102C4.2334 7.83203 4.00098 8.06445 4.00098 8.37207C4.00098 8.67285 4.2334 8.91211 4.54102 8.91211Z"></path></svg></span>Created</th><td><time>@December 20, 2023 6:36 PM</time></td></tr><tr class="property-row property-row-multi_select"><th><span class="icon property-icon"><svg role="graphics-symbol" viewBox="0 0 16 16" style="width:14px;height:14px;display:block;fill:rgba(55, 53, 47, 0.45);flex-shrink:0" class="typesMultipleSelect"><path d="M1.91602 4.83789C2.44238 4.83789 2.87305 4.40723 2.87305 3.87402C2.87305 3.34766 2.44238 2.91699 1.91602 2.91699C1.38281 2.91699 0.952148 3.34766 0.952148 3.87402C0.952148 4.40723 1.38281 4.83789 1.91602 4.83789ZM5.1084 4.52344H14.3984C14.7607 4.52344 15.0479 4.23633 15.0479 3.87402C15.0479 3.51172 14.7607 3.22461 14.3984 3.22461H5.1084C4.74609 3.22461 4.45898 3.51172 4.45898 3.87402C4.45898 4.23633 4.74609 4.52344 5.1084 4.52344ZM1.91602 9.03516C2.44238 9.03516 2.87305 8.60449 2.87305 8.07129C2.87305 7.54492 2.44238 7.11426 1.91602 7.11426C1.38281 7.11426 0.952148 7.54492 0.952148 8.07129C0.952148 8.60449 1.38281 9.03516 1.91602 9.03516ZM5.1084 8.7207H14.3984C14.7607 8.7207 15.0479 8.43359 15.0479 8.07129C15.0479 7.70898 14.7607 7.42188 14.3984 7.42188H5.1084C4.74609 7.42188 4.45898 7.70898 4.45898 8.07129C4.45898 8.43359 4.74609 8.7207 5.1084 8.7207ZM1.91602 13.2324C2.44238 13.2324 2.87305 12.8018 2.87305 12.2686C2.87305 11.7422 2.44238 11.3115 1.91602 11.3115C1.38281 11.3115 0.952148 11.7422 0.952148 12.2686C0.952148 12.8018 1.38281 13.2324 1.91602 13.2324ZM5.1084 12.918H14.3984C14.7607 12.918 15.0479 12.6309 15.0479 12.2686C15.0479 11.9062 14.7607 11.6191 14.3984 11.6191H5.1084C4.74609 11.6191 4.45898 11.9062 4.45898 12.2686C4.45898 12.6309 4.74609 12.918 5.1084 12.918Z"></path></svg></span>Tags</th><td></td></tr><tr class="property-row property-row-url"><th><span class="icon property-icon"><svg role="graphics-symbol" viewBox="0 0 16 16" style="width:14px;height:14px;display:block;fill:rgba(55, 53, 47, 0.45);flex-shrink:0" class="typesUrl"><path d="M7.69922 10.8945L8.73828 9.84863C7.91797 9.77344 7.34375 9.51367 6.91992 9.08984C5.76465 7.93457 5.76465 6.29395 6.91309 5.14551L9.18262 2.87598C10.3379 1.7207 11.9717 1.7207 13.127 2.87598C14.2891 4.04492 14.2822 5.67188 13.1338 6.82031L11.958 7.99609C12.1768 8.49512 12.2451 9.10352 12.1289 9.62988L14.0908 7.6748C15.7725 6 15.7793 3.62109 14.084 1.92578C12.3887 0.223633 10.0098 0.237305 8.33496 1.91211L5.95605 4.29785C4.28125 5.97266 4.26758 8.35156 5.96289 10.0469C6.36621 10.4434 6.90625 10.7441 7.69922 10.8945ZM8.30078 5.13184L7.26855 6.17773C8.08203 6.25293 8.66309 6.51953 9.08008 6.93652C10.2422 8.09863 10.2422 9.73242 9.08691 10.8809L6.81738 13.1504C5.66211 14.3057 4.03516 14.3057 2.87305 13.1504C1.71094 11.9883 1.71777 10.3545 2.87305 9.20605L4.04199 8.03027C3.83008 7.53125 3.75488 6.92969 3.87109 6.39648L1.91602 8.35156C0.234375 10.0264 0.227539 12.4121 1.92285 14.1074C3.61816 15.8027 5.99707 15.7891 7.67188 14.1143L10.0439 11.7354C11.7256 10.0537 11.7324 7.6748 10.0371 5.98633C9.64062 5.58301 9.10059 5.28223 8.30078 5.13184Z"></path></svg></span>URL</th><td><a href="https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/" class="url-value">https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/</a></td></tr></tbody></table></header><div class="page-body"><figure id="2aa6bc50-ac53-49ec-8f6b-3634e690be8a" class="image"><a href="How%20to%20simply%20workaround%20RAM-leaking%20libraries%20lik%201041d4736da9403f8b50dc3e90aab13a/PqjiZfvhZmATJ2GCfbY64f.webp"><img src="How%20to%20simply%20workaround%20RAM-leaking%20libraries%20lik%201041d4736da9403f8b50dc3e90aab13a/PqjiZfvhZmATJ2GCfbY64f.webp"/></a></figure><p id="a3da83de-94c0-4ba2-b358-a31c5939399e" class="">RAM leaks is very common problem which happens in a big amount of external libraries. They might work perfectly, have a lot of downloads on NPM and stars on the GitHub. Nevertheless, all of these does not really save them from RAM leaks on a long run. Especially if they have some underlying native bindings. Library can be unreplaceable in own niche, have very simple API, and satisfy you in all other aspects but consume more and more RAM when you use it in long-running process.</p><p id="e75699db-460b-48ca-8c96-c8ceb3ab9436" class="">For example, one of the most popular cases here are all libraries which are based on headless Chromium. One of them is very popular Nodejs package called <a href="https://github.com/puppeteer/puppeteer">puppeteer</a> which is a great tool for crawling, user-imitation and testing tasks. This library is API-controlled wrapper over Chromium which allows you to load page, walk through selectors, make some clicks on site or enter some values in inputs on page. But when you use it in a long-running process your <a href="https://devforth.io/blog/critical-server-alerts-with-hothost-open-source-quick-to-setup-disk-ram-notifier/">server monitoring tool starts reporting &quot;RAM is almost full&quot;</a>. Having lack of RAM on server is a terrible thing because it activates operation system&#x27;s out-of-memory killer who starts killing any processes randomly causing service downtime or even touching system processes which destroy server connectivity until full reboot.</p><figure id="79081e11-f386-4195-898c-e6c60217caf5" class="image"><a href="How%20to%20simply%20workaround%20RAM-leaking%20libraries%20lik%201041d4736da9403f8b50dc3e90aab13a/VhFGFdJNoqAcEscvf2s9nH.gif"><img style="width:480px" src="How%20to%20simply%20workaround%20RAM-leaking%20libraries%20lik%201041d4736da9403f8b50dc3e90aab13a/VhFGFdJNoqAcEscvf2s9nH.gif"/></a></figure><p id="1d990ac1-a088-456a-ab33-30341c0bb906" class="">Another challenge is to find which code or library caused the leak in your app. What you might get is a huge amount of RAM reported by <strong>htop </strong>utility after couple of days of your process uptime and you will have no clues what caused it. There are reliable methods to understand it but we will not cover them in this post. Basically, assumptions and suspicions based on developer&#x27;s experience in combination with code experiments work here as well.</p><p id="d136ede9-d008-4ee8-bfa1-3b29433d6ec8" class="">In this post I will show how you can easily overcome such problems by using child processes. We will make some simple experiments which confirm RAM leaks and then show how to workaround them. The fix described here could be adopted to absolutely any issue caused by RAM leaks in external imported library, including casing when you need to pass data to/from child process.</p><h3 id="6aba4198-ee19-4a19-a2e6-894f58ad0f1c" class=""><strong>Code which leaks</strong></h3><p id="ff6f2359-c743-4148-a12a-26fd6306ee45" class="">First of all start a new NPM project and install puppeteer:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="678eaff2-41a0-4842-a5d1-d84180dca001" class="code code-wrap"><code class="language-JavaScript">npm init
+npm i puppeteer</code></pre><p id="d20ce307-c8f2-41c4-8b1a-d2b998750e53" class="">For me this code installed latest version which is <strong>14.2.1</strong> (you can check this in <strong>package.json</strong>). In future versions of Puppeteer or underlying Chrome probably RAM leak will receive appropriate true fix, but assuming how long this issue is there, I think it might never happen. Also most Chrome-based libraries like CEF were always leaky.</p><p id="f334087b-8264-49fb-9b17-0dde75ba800e" class="">Also, as always, I added <strong>&quot;type&quot;: &quot;module&quot;</strong>, to my <strong>package.json</strong> so my <strong>nodejs </strong>(v16) will have imports support.</p><p id="f35fca62-7916-4927-96ef-f23118e9a8bf" class="">Now create an <strong>index.js</strong> file:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="46cfab8b-0633-479e-8853-2758c6b0f322" class="code code-wrap"><code class="language-JavaScript">import puppeteer from &#x27;puppeteer&#x27;;
+async function run() {
+  let i = 0;
+  const browser = await puppeteer.launch({ args: [&#x27;--no-sandbox&#x27;, &#x27;--disable-setuid-sandbox&#x27;] });
+  while(true) {
+    const page = await browser.newPage();
+    try {
+      await page.goto(&#x27;https://www.airbnb.com/&#x27;, {waitUntil: &#x27;networkidle2&#x27;});
+      const buttonTitle = await page.evaluate(() =&gt; {
+        return document.querySelector(&#x27;[href=&quot;/host/homes&quot;]&#x27;).innerText;
+      });
+      if (buttonTitle !== &#x27;Become a Host&#x27;) {
+        console.error(&#x27;Was not able to load a page&#x27;)
+      }
+      console.log(&#x27;👌🏼 Page loaded&#x27;, i++)
+    } catch {
+      console.log(&#x27;🙅🏼‍♀️ Page did not load&#x27;, i++)
+    } finally {
+      await page.close();
+    }
+  }
+  await browser.close(); // never executes
+}
+
+run();
+
+</code></pre><p id="173e1f6b-6c6c-4e1e-b1bf-2ffaf8a255c7" class="">Code creates one browser instance using <strong>puppeteer.launch</strong> and then creates a page in every iteration of the loop, navigates this page to Airbnb website and looks for a tag with <strong>href </strong>which is equal to <strong>&quot;/host/homes&quot;</strong>. This is an anchor to &quot;becoming a host&quot; page, and our code verifies that title is correct. In this way we make sure that we are able to fully load a page in all our experiments and get some feedback from that page.</p><h3 id="6ecc0b60-3888-4a17-a994-c9707514ca75" class=""><strong>How to measure process RAM consumption</strong></h3><p id="c337c424-ffc4-42cc-a281-97039ecb2c2d" class="">First of all we will always start node process using fake argument <strong>--tagprocess </strong>which will be ignored by NodeJS and by our script but will allow us to reliably filter out our processes in output of <strong>ps</strong>:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="a178d6a3-9a97-41e2-990f-724ec9e654bf" class="code code-wrap"><code class="language-JavaScript">node index.js --tagprocess</code></pre><p id="918f6d63-c5ed-48c4-9d7b-454ebf8c9857" class="">Now we can run simple <strong>ps aux</strong> to get RAM used by our process:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e44f6bd0-ffa9-418d-a2dc-b9361fda1be7" class="code code-wrap"><code class="language-JavaScript">ps aux | grep &#x27;tagprocess\|USER&#x27;  | grep -v grep
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+ivan      6852 44.8  0.3 11155244 105716 pts/10 Sl+ 11:33   5:53 node index.js --tagprocess</code></pre><p id="1c25b88b-1968-4f8a-96e5-7664a7e38dba" class="">There are two interesting fields in the output related to memory:</p><ol type="1" id="372dab83-06c7-4c98-b911-27505477204e" class="numbered-list" start="1"><li>VSZ - <strong>Virtual Memory Size.</strong> This is the size of memory that Linux has given to our process, but it doesn’t necessarily mean that the process is using all of that memory.</li></ol><ol type="1" id="bc27c3fc-9d7c-4775-8973-68bf6796ed89" class="numbered-list" start="2"><li>RSS is <strong>Resident Set Size</strong>. This is the size of memory that a process has currently used to load all of its pages. Always represented in KiB.</li></ol><p id="73511431-764e-43eb-8234-da48bcc0407c" class="">So most interesting for us is RSS</p><blockquote id="99e324b3-a7da-4c22-912a-872add6f9c3f" class="">Important fact: RSS value might be a little bit overestimated because it counts memory occupied by all shared libraries used by process. In fact if there is other process which also uses same shared library then Linux avoids reloading a duplicate copy of the library into RAM, and just shares the same copy that the first application is using. But it will not hurt our experiments</blockquote><p id="2dca1adb-89de-4a5d-9f83-a4b0d0863686" class="">To automate measuring I created a simple script: here is it: <a href="https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043">Measure RAM consumption of any process with --tagprocess argument and show count of such processes</a>. Left blue axis shows total RAM consumption of all processes that are now being executing with fake input argument --tagprocess. Red right bar shows number of processes with this tag.</p><p id="310fd944-93a7-4bb2-8adc-eba3e8faf1b9" class="">In this experiment check memory consumption of node process:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="24bdde14-88ad-4f82-a0ec-5dd9451361bf" class="code code-wrap"><code class="language-JavaScript">node drawRamOnChart.js &#x27;tagprocess&#x27;</code></pre><p id="5f18389d-2f56-40ac-ba9a-8450134beb46" class="">Here is what I got:</p><figure id="3d174c26-a647-4f67-9beb-36ec5864b5be" class="image"><a href="https://faststatic.devforth.io/main/aFqcmDuhRGsQqnpCnG7WpH.png"><img src="https://faststatic.devforth.io/main/aFqcmDuhRGsQqnpCnG7WpH.png"/></a></figure><p id="aba20c2d-f65b-40ed-8a9b-e57e728671ca" class="">Memory growth of re-created puppeteer pages during 600 seconds (10 minutes)</p><p id="cd864cbf-a968-4e7b-bd59-57cb2a2377b1" class="">For the 10 minutes reflected on chart, our code made more then 200 page loads. By building a trend line across minimal RAM points in a smaller intervals you can recognize a leak even on such a short period of time. We spent only 10 minutes and RAM consumption minimum level permanently increases.</p><p id="6ee8c1b2-6ca0-4cfd-9ade-ed37c450b611" class="">But let&#x27;s consider more interesting story. To present you concrete proof of leak I created a code snippet which I can run for a longer time:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="08c72b94-10d5-48dc-93cf-2f857624029b" class="code code-wrap"><code class="language-JavaScript">import puppeteer from &#x27;puppeteer&#x27;;
+import fs from &quot;fs&quot;;
+import { parse } from &quot;csv-parse&quot;;
+
+const websites = [];
+fs.createReadStream(&quot;./top-1m.csv&quot;)
+  .pipe(parse({ delimiter: &quot;,&quot;, from_line: 1 }))
+  .on(&quot;data&quot;, function (row) {
+    websites.push(row[1]);
+  })
+
+function getRandomWebsite() {
+  return websites[Math.floor(Math.random()*websites.length)]
+}
+
+async function run() {
+  let i = 0;
+  const browser = await puppeteer.launch({ args: [&#x27;--no-sandbox&#x27;,] });
+  while(true) {
+    const page = await browser.newPage();
+    try {
+      await page.goto(`https://${getRandomWebsite()}`, {waitUntil: &#x27;load&#x27;, timeout: 500});
+      await page.screenshot({path: &#x27;file.png&#x27;});
+      console.log(&#x27;👌🏼 Page loaded&#x27;, i++)
+    } catch {
+      console.log(&#x27;🙅🏼‍♀️ Page did not load&#x27;, i++)
+    } finally {
+      await page.close();
+    }
+
+  }
+  await browser.close(); // never executes
+}
+
+run();</code></pre><p id="0619425f-711e-4892-8e17-679c9c22f681" class="">The snippet uses one <a href="http://s3.amazonaws.com/alexa-static/top-1m.csv.zip">million of top websites according to Alexa rank</a>. In loop I just get random website and try to load it within half of a second in a new page which get&#x27;s closed in each iteration of the loop. While I don&#x27;t want to fetch Airbnb website for an hours, I can safely do requests to random websites.</p><p id="aa8207d7-75a2-4a92-97fc-29177b0ba999" class="">Let&#x27;s profile memory consumption on both node process and chrome processes spawned by puppeteer:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="fb9e3207-2cf6-413c-bdf4-4ba72c162045" class="code code-wrap"><code class="language-JavaScript">node drawRamOnChart.js &#x27;tagprocess|chrome&#x27;</code></pre><p id="487af08e-9f5d-490d-b9fc-8d7d72493cbc" class="">Let&#x27;s consider first ~1.5 hours of this script:</p><figure id="8dd4617c-980c-4ffd-87a1-779e1c45a684" class="image"><a href="https://faststatic.devforth.io/main/h3LJgUeDMPaWaWQS2D3XdH.png"><img src="https://faststatic.devforth.io/main/h3LJgUeDMPaWaWQS2D3XdH.png"/></a></figure><p id="1f2d5c55-2693-4c16-8d3b-3d2bcd475c48" class="">Random websites 0.5 seconds load in a new pages</p><p id="6623cfe7-1e32-47ca-8180-d7233b885dbe" class="">Apart of &quot;dramatic&quot; memory jumps we can also notice constant slow memory increase.</p><p id="c403951f-79b1-44db-a017-c7838b91726b" class="">You might notice that we have only one instance of browser created by <strong>puppeteer.launch</strong> and then in loop we create a page and close it. You might think that probably memory leak will go away if we will try to recreate browser. Well, let&#x27;s try it:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="231419c4-218b-48ce-ba12-da462ee40236" class="code code-wrap"><code class="language-JavaScript">import puppeteer from &#x27;puppeteer&#x27;;
+
+async function run() {
+  let i = 0;
+  while(true) {
+    const browser = await puppeteer.launch({ args: [&#x27;--no-sandbox&#x27;, &#x27;--disable-setuid-sandbox&#x27;] });
+    const page = await browser.newPage();
+    try {
+      await page.goto(&#x27;https://www.airbnb.com/&#x27;, {waitUntil: &#x27;networkidle2&#x27;});
+      const buttonTitle = await page.evaluate(() =&gt; {
+        return document.querySelector(&#x27;[href=&quot;/host/homes&quot;]&#x27;).innerText;
+      });
+      if (buttonTitle !== &#x27;Become a Host&#x27;) {
+        console.error(&#x27;Was not able to load a page&#x27;)
+      }
+      console.log(&#x27;🎉 Request made&#x27;, i++)
+    } catch {
+      console.log(&#x27;😭 Request failed&#x27;, i++)
+    } finally {
+      await page.close();
+      await browser.close();
+    }
+  }
+}
+
+run();
+</code></pre><p id="83be3447-da61-4f45-a512-20e72e30f098" class="">Here is RAM consumption for this script:</p><figure id="9f930eab-892d-4284-a4c1-f37686f48dbc" class="image"><a href="https://faststatic.devforth.io/main/eTPoTQmrRVs3SkRrMXCtWK.png"><img src="https://faststatic.devforth.io/main/eTPoTQmrRVs3SkRrMXCtWK.png"/></a></figure><p id="59d5031b-c653-403b-9cfa-41c32f3eae04" class="">RAM consumption for infinite puppeteer relaunching during 600 seconds (10 minutes)</p><p id="8775c266-d904-4b42-a25c-8a01c29d95a7" class="">As we can see leak is still there.</p><h3 id="36ccf759-7ea7-45b4-844c-b2ab415f55a1" class=""><strong>Universal fix for RAM leaks issues</strong></h3><p id="2b8ffc26-a6d8-4f55-afb2-3a1d7a408529" class="">So here is a very simple idea which works great in all such cases: Instead of importing and using library in your main process, you move the Puppeteer calls completely to a small child process. After task is done, child process exits completely and releases all consumed RAM. There is no leak in parent process because it even does not import leaking library.</p><p id="2f235ae6-7c69-4d85-9d21-65b7940c582a" class="">There are 3 main challenges here:</p><ol type="1" id="1bf1b975-9f84-4544-bc9b-83a7d88b8004" class="numbered-list" start="1"><li>We need to know how to run child process with a full RAM decoupling from parent</li></ol><ol type="1" id="ac7f701f-0458-4367-b95d-040284c4c0b2" class="numbered-list" start="2"><li>We need to pass input data to a child process</li></ol><ol type="1" id="2016eefc-00bb-4568-8c8b-8e084633b4da" class="numbered-list" start="3"><li>We need to get output data back</li></ol><p id="20cf6cd1-72e9-4aa9-a48d-bab6926bbed0" class="">Second and third points should be resolved through a mechanisms of Inter Process Communication. There are different options to organize IPC, but we will use simplest ones, and in same time pretty compatible with majority of tasks.</p><p id="aaa56d7b-252d-4dda-b43f-24ae6bde0d6c" class="">So here is a solution. Create a file called <strong>puWorker.js</strong>:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d74dc2d7-cf87-4c83-bd97-41c2a4db2f61" class="code code-wrap"><code class="language-JavaScript">import puppeteer from &#x27;puppeteer&#x27;;
+
+// WARNING: don&#x27;t use console.log here for debug, use console.error instead. STDOUT is used to deliver output data
+
+// find value of input process argument with --input-data
+
+const inpDataB64 = process.argv.find((a) =&gt; a.startsWith(&#x27;--input-data&#x27;)).replace(&#x27;--input-data&#x27;, &#x27;&#x27;)
+const inputData = JSON.parse(Buffer.from(inpDataB64, &#x27;base64&#x27;).toString())
+
+const browser = await puppeteer.launch({ args: [&#x27;--no-sandbox&#x27;, &#x27;--disable-setuid-sandbox&#x27;,] });
+const page = await browser.newPage();
+
+await page.goto(inputData.url, {waitUntil: &#x27;networkidle2&#x27;});
+
+const buttonTitle = await page.evaluate(({ inputData }) =&gt; {
+  return document.querySelector(inputData.selectorToGet).innerText;
+}, { inputData });
+
+const outputData = {
+  buttonTitle: buttonTitle,
+}
+
+await page.close();
+await browser.close();
+
+console.log(JSON.stringify(outputData))  // print out data to STDOUT</code></pre><p id="0aebe7af-a461-4040-a0ae-d08f0fe469c3" class="">Change our <strong>index.js</strong> file to this one:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="4a4431c8-0d76-41e4-bfdd-aa81d47e28dd" class="code code-wrap"><code class="language-JavaScript">import { spawn } from &#x27;child_process&#x27;;
+import path from &#x27;path&#x27;;
+const __dirname = path.resolve();
+
+async function runPupeteer(data) {
+  const jsonData = JSON.stringify(data)
+  const b64Data = Buffer.from(jsonData).toString(&#x27;base64&#x27;);
+  let stdoutData = &#x27;&#x27;;
+  return await new Promise((resolve) =&gt; {
+    const proc = spawn(&#x27;node&#x27;, [
+      path.resolve(__dirname, &#x27;puWorker.js&#x27;),
+      `--input-data${b64Data}`,
+      &#x27;--tagprocess&#x27;
+    ], { shell: false });
+    proc.stdout.on(&#x27;data&#x27;, (data) =&gt; {
+      stdoutData += data;
+    });
+    proc.stderr.on(&#x27;data&#x27;, (data) =&gt; {
+      console.error(`NodeERR: ${data}`);
+    });
+    proc.on(&#x27;close&#x27;, async (code) =&gt; {
+    });
+    proc.on(&#x27;exit&#x27;, function () {
+      proc.kill();
+      resolve(JSON.parse(stdoutData));
+    });
+  });
+}
+
+async function run() {
+  let i = 0;
+  while(true) {
+    const resData = await runPupeteer({
+      url: &#x27;https://www.airbnb.com/&#x27;,
+      selectorToGet: &#x27;[href=&quot;/host/homes&quot;]&#x27;,
+      i,
+    });
+    if (resData.buttonTitle !== &#x27;Become a Host&#x27;) {
+      console.error(&#x27;Was not able to load a page&#x27;)
+    }
+    console.log(&#x27;🎉 Request made&#x27;, i++)
+  }
+}
+
+run();</code></pre><p id="eeeaf8a8-e375-4d9b-9a5f-7c221dc81e35" class="">Let&#x27;s profile it:</p><figure id="b249f86f-be7d-4601-8bb0-7d9ab56d0a4e" class="image"><a href="https://faststatic.devforth.io/main/iAcRhguXJZQPri7GQSpwDA.png"><img src="https://faststatic.devforth.io/main/iAcRhguXJZQPri7GQSpwDA.png"/></a></figure><p id="31f41b97-7019-4d83-a0e1-b6cd76297f32" class="">RAM consumption without leaks using fixed approach</p><p id="af44b3a2-a55b-433d-a1d3-aeff1378338d" class="">Difference is obvious 😎. Time from time we see needles which lower the used RAM down.</p><figure id="1c289d20-af48-4f0b-bb6b-ab2265fca34e" class="image"><a href="https://faststatic.devforth.io/imgorig/7tbWcFs2vJuJoXvQhBZsHQ.gif"><img src="https://faststatic.devforth.io/imgorig/7tbWcFs2vJuJoXvQhBZsHQ.gif"/></a></figure><p id="23a54ec5-668f-4787-9510-b9565e3cb053" class="">Now couple of comments regarding to the code. For passing input data we used simple CLI argument. To be capable with any kind of data, I encode it with JSON and Base64. This is enough for most tasks, however we should remember that there is a command length limit, which is near 8 KiB in Linux. If you have to pass larger amounts of data you can save it to some temporary file and pass only filename, <a href="https://github.com/devforth/scriptimate/blob/master/bin/puWorker.js#L22">like we do it in Scriptimate</a>. To deliver data back we just print JSON to STDOUT.</p><p id="55a32bca-288c-4feb-9be0-d6b013e516b1" class="">This is it. Stay stable, stay low RAM, write sweet code and the main thing: russians go to hell with their f*king war</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
