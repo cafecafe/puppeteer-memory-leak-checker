@@ -1,4 +1,5 @@
-#Puppeteer memory leak checker
+# Puppeteer memory leak checker
+
 A slightly modified version presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub>a saved article copy is available in the docs folder</sub>
 
 - index.js is just a puppeteer visitor script
