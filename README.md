@@ -1,6 +1,6 @@
 # Puppeteer memory leak checker
 
-A slightly modified version presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub> a saved article copy is available in the docs folder</sub>
+A slightly modified version of the script initially presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub> (a saved article copy is available in the docs folder)</sub>
 
 - `index.js` is just a puppeteer visitor script
 - `drawmemoryoncharg.js` is a chart drawing script<sub>[source](https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043)</sub>
