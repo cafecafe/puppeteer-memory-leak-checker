@@ -21,7 +21,7 @@ There's an option to save the screenshots, if needed, uncomment the following li
 
 ---
 
-#Quick start
+## Quick start
 
 ```
 git clone https://github.com/cafecafe/puppeteer-memory-leak-checker.git
