@@ -17,7 +17,10 @@ sudo apt-get install ca-certificates fonts-liberation libappindicator3-1 libasou
 ```
 
 There's an option to save the screenshots, if needed, uncomment the following line
-`// await page.screenshot({path: \`file${i}.png\`});`
+
+```
+// await page.screenshot({path: `file${i}.png`});
+```
 
 ---
 
