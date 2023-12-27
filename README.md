@@ -2,8 +2,8 @@
 
 A slightly modified version presented in [this article](https://devforth.io/blog/how-to-simply-workaround-ram-leaking-libraries-like-puppeteer-universal-way-to-fix-ram-leaks-once-and-forever/)<sub> a saved article copy is available in the docs folder</sub>
 
-- `index.js`` is just a puppeteer visitor script
-- `drawmemoryoncharg.js`` is a chart drawing script<sub>[source](https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043)</sub>
+- `index.js` is just a puppeteer visitor script
+- `drawmemoryoncharg.js` is a chart drawing script<sub>[source](https://gist.github.com/ivictbor/a0c35865a3e67708b6ff52ba8bc45043)</sub>
 - `csv-parse` and `puppeteer` modules are required for the opener
 - `vega` and `sharp` modules are needed for drawing the chart
 
@@ -36,4 +36,4 @@ screen
 - in the first window run `node index.js --tagprocess` _--tagprocess_ here is a fake argument just to track the process later
 - in the second window run `node drawramonchart.js 'tagprocess'` or `node drawramonchart.js 'tagprocess|chrome'`
 - `RAMChart_tagprocess.png` or `RAMChart_tagprocess_or_chrome.png` png should appear in the folder
-- _index.js_ run indifinetly. `Ctrl + C` in the Putty window to stop the process
+- _index.js_ runs indifinetly. `Ctrl + C` in the Putty window to stop the process
