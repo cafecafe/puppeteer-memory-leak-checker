@@ -33,7 +33,10 @@ screen
 ```
 
 - connect with Putty in a separate window
-- in the first window run `node index.js --tagprocess` _--tagprocess_ here is a fake argument just to track the process later
-- in the second window run `node drawramonchart.js 'tagprocess'` or `node drawramonchart.js 'tagprocess|chrome'`
+- in the first window run
+  `node index.js --tagprocess`
+  _--tagprocess_ here is a fake argument just to track the process later
+- in the second window run
+  `node drawramonchart.js 'tagprocess'` or `node drawramonchart.js 'tagprocess|chrome'`
 - `RAMChart_tagprocess.png` or `RAMChart_tagprocess_or_chrome.png` png should appear in the folder
-- _index.js_ runs indifinetly. `Ctrl + C` in the Putty window to stop the process
+- _index.js_ runs indifinetly. `Ctrl+C` in the Putty window to stop the drawing process, then `Ctrl+C` process in the index.js window
