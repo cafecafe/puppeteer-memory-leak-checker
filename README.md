@@ -39,4 +39,4 @@ screen
 - in the second window run
   `node drawramonchart.js 'tagprocess'` or `node drawramonchart.js 'tagprocess|chrome'`
 - `RAMChart_tagprocess.png` or `RAMChart_tagprocess_or_chrome.png` png should appear in the folder
-- _index.js_ runs indifinetly. `Ctrl+C` in the Putty window to stop the drawing process, then `Ctrl+C` process in the index.js window
+- _index.js_ runs indifinetly. `Ctrl+C` in the Putty window to stop the `index.js` process, wait a 10 seconds and then `Ctrl+C` in another window to stop the drawing process
