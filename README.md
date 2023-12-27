@@ -28,7 +28,7 @@ There's an option to save the screenshots, if needed, uncomment the following li
 
 ```
 git clone https://github.com/cafecafe/puppeteer-memory-leak-checker.git
-npm init
+npm install
 screen
 ```
 
