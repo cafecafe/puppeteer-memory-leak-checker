@@ -9,7 +9,7 @@ A slightly modified version presented in [this article](https://devforth.io/blog
 
 The mentioned alexa top csv file isn't available anymore, therefore it's been replaced by the [Cloudflare top 5000 domains](https://radar.cloudflare.com/domains) (unsorted)
 
-- Screen is required `apt-get install screen`
+- Screen is required `apt-get install screen` [Detailed guide](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-screen-on-an-ubuntu-cloud-server)
 - Most likely, there will be some libraries missing for Chromium/Puppeteer, this command should solve it <sub>[source](https://stackoverflow.com/questions/66214552/tmp-chromium-error-while-loading-shared-libraries-libnss3-so-cannot-open-sha)</sub>
 
 ```
@@ -32,7 +32,7 @@ npm init
 screen
 ```
 
-- connect in a separate window
+- connect with Putty in a separate window
 - in the first window run `node index.js --tagprocess` --tagprocess here is a fake argument just to track the process later
 - in the second window run `node drawramonchart.js 'tagprocess'` or `node drawramonchart.js 'tagprocess|chrome'`
 - `RAMChart_tagprocess.png` or `RAMChart_tagprocess_or_chrome.png` png should appear
